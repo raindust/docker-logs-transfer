@@ -33,14 +33,14 @@ fn main() -> anyhow::Result<()> {
     let out_file = OpenOptions::new()
         .create(true)
         .write(true)
-        .append(false)
+        .truncate(true)
         .open(opts.output)?;
     let mut writer = BufWriter::new(out_file);
 
     let mut flush_index = 0;
     for line in reader.lines() {
         let value: JsonLog = serde_json::from_str(line?.as_str())?;
-        write!(writer, "{}", value.log)?;
+        writer.write(value.log.as_bytes())?;
 
         flush_index += 1;
         if flush_index >= opts.max_flush_lines {
