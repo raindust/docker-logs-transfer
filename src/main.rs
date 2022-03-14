@@ -23,6 +23,9 @@ pub struct Opts {
 
     #[clap(short = 'o', long)]
     pub output: Option<String>,
+
+    #[clap(short = 's', long)]
+    pub strip_ansi_color: bool,
 }
 
 fn default_log_name() -> String {
@@ -60,7 +63,11 @@ fn process_and_save(
     let mut flush_index = 0;
     for line in reader.lines() {
         let value: JsonLog = serde_json::from_str(line?.as_str())?;
-        writer.write(value.log.as_bytes())?;
+        if opts.strip_ansi_color {
+            writer.write(&strip_ansi_escapes::strip(value.log.as_bytes())?)?;
+        } else {
+            writer.write(value.log.as_bytes())?;
+        }
 
         flush_index += 1;
         if flush_index >= opts.max_flush_lines {
